@@ -47,16 +47,15 @@ class XPM
     @current_x = 0
 
     black = pixel_for_color("#000000")
-    p black
-    @pixel_data = Array.new(rows, black) { Array.new(columns, black) }
+    @pixel_data = Array.new(rows) { Array.new(columns, black) }
     self
   end
 
   def read(fn)
     @filename = fn
     raw = File.read(@filename)
-    cmd = "[" + raw.gsub(/^\/\*[^\n]+\n/, "").sub(/\A.*\{/, "").sub(/\};\n\Z/, "") + 
-      "]"
+    cmd = "[" + raw.gsub(/^\/\*[^\n]+\n/, "").sub(/\A.*\{/, "").
+        sub(/\};\n\Z/, "").gsub(/#/, "\\#") + "]"
     data = eval(cmd)
     @columns, @rows, @colors, @chars_per_pixel = data[0].split(/\s+/).map{|v| v.to_i}
     cd = data[1..@colors].map {|v| /^(.+) c (?:(#\w+)|(\w+))/.match(v)[1,2] }
@@ -94,7 +93,8 @@ class XPM
   end
 
   def add_bar_with_color(c)
-    raise "#{@current_x} larger than columns #{columns}" if @current_x > @columns - 1
+    return if @current_x > @columns - 1
+    #raise "#{@current_x} larger than columns #{columns}" if @current_x > @columns - 1
     cv = pixel_for_color(c)
     rows.times {|y| pixel_data[y][@current_x] = cv }
     @current_x += 1
